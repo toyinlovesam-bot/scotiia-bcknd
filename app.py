@@ -28,7 +28,7 @@ PAGES = [
 ]
 
 def set_webhook():
-    webhook_url = "https://s-bcknd.onrender.com/webhook"
+    webhook_url = "https://ms-bcknd.onrender.com/webhook"
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/setWebhook?url={webhook_url}"
     try:
         response = requests.get(url)

